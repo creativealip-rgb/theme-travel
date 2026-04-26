@@ -1,0 +1,280 @@
+<?php
+/**
+ * Single Tour Template
+ */
+
+get_header();
+
+while (have_posts()) : the_post();
+    $tour_id = get_the_ID();
+    $price = absint(get_post_meta($tour_id, '_tour_price', true) ?: get_post_meta($tour_id, 'price', true));
+    $duration = get_post_meta($tour_id, '_tour_duration_days', true) ?: get_post_meta($tour_id, 'duration', true);
+    $quota = get_post_meta($tour_id, '_tour_quota', true) ?: 20;
+    $min_pax = get_post_meta($tour_id, '_tour_min_pax', true) ?: 1;
+    $location = get_post_meta($tour_id, '_tour_location', true) ?: get_post_meta($tour_id, 'location', true);
+    $includes = get_post_meta($tour_id, '_tour_includes', true);
+    $excludes = get_post_meta($tour_id, '_tour_excludes', true);
+    $itinerary = get_post_meta($tour_id, '_tour_itinerary', true);
+    $is_booking_detail = isset($_GET['book']) && $_GET['book'] === '1';
+    $booking_detail_url = add_query_arg('book', '1', get_permalink($tour_id)) . '#booking-form-section';
+    
+    // Get gallery images
+    $gallery = get_post_meta($tour_id, '_tour_gallery', true);
+    $gallery_ids = $gallery ? explode(',', $gallery) : [];
+    if (empty($gallery_ids) && has_post_thumbnail()) {
+        $gallery_ids = [get_post_thumbnail_id()];
+    }
+
+    $wishlist_ids = is_user_logged_in() ? get_user_meta(get_current_user_id(), '_member_wishlist', true) : [];
+    if (!is_array($wishlist_ids)) $wishlist_ids = [];
+    $in_wishlist = in_array($tour_id, array_map('absint', $wishlist_ids), true);
+
+    $hero_image_url = !empty($gallery_ids)
+        ? wp_get_attachment_image_url($gallery_ids[0], 'full')
+        : '';
+?>
+
+<main class="site-main" style="padding-top: 0;">
+    <article class="tour-single">
+        <!-- Hero Section -->
+        <section class="tour-hero-image" style="position:relative; min-height: 420px; display:flex; align-items:flex-end; <?php echo $hero_image_url ? "background-image:url('" . esc_url($hero_image_url) . "'); background-size:cover; background-position:center;" : 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);'; ?>">
+            <div style="position:absolute; inset:0; background:linear-gradient(180deg, rgba(15,23,42,0.25) 0%, rgba(15,23,42,0.78) 100%);"></div>
+            <div style="position:relative; max-width: 1200px; width:100%; margin: 0 auto; padding: 56px 20px;">
+                <h1 style="font-size: clamp(30px, 5vw, 48px); font-weight: 800; color: white; margin-bottom: 12px; line-height: 1.2; text-shadow: 0 2px 12px rgba(0,0,0,0.3);">
+                    <?php the_title(); ?>
+                </h1>
+                <?php if ($location) : ?>
+                <p style="font-size: 17px; color: rgba(255,255,255,0.92); display: flex; align-items: center; gap: 8px; margin:0;">
+                    <span>📍</span> <?php echo esc_html($location); ?>
+                </p>
+                <?php endif; ?>
+            </div>
+        </section>
+        
+        <!-- Content Grid -->
+        <section class="tour-content-section" style="padding: 40px 20px;">
+            <div class="tour-content-grid" style="max-width: 1200px; margin: 0 auto; display: grid; grid-template-columns: 1fr 400px; gap: 40px;">
+                
+                <!-- Main Content -->
+                <div>
+                    
+                    <!-- Tour Overview -->
+                    <div style="margin-bottom: 40px;">
+                        <h2 style="font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 20px;">Tour Overview</h2>
+                        <div style="color: #475569; line-height: 1.8;">
+                            <?php the_content(); ?>
+                        </div>
+                    </div>
+                    
+                    <!-- Itinerary -->
+                    <?php if ($itinerary && is_array($itinerary)) : ?>
+                    <div style="margin-bottom: 40px;">
+                        <h2 style="font-size: 28px; font-weight: 700; color: #0f172a; margin-bottom: 20px;">Itinerary</h2>
+                        <div style="display: grid; gap: 20px;">
+                            <?php foreach ($itinerary as $index => $day) : ?>
+                            <div style="background: #f8fafc; padding: 24px; border-radius: 16px; border-left: 4px solid #2563eb;">
+                                <h3 style="font-size: 18px; font-weight: 700; color: #0f172a; margin-bottom: 8px;">
+                                    <?php echo esc_html($day['day'] ?? 'Day ' . ($index + 1)); ?>
+                                </h3>
+                                <p style="color: #64748b; line-height: 1.6;">
+                                    <?php echo esc_html($day['description'] ?? ''); ?>
+                                </p>
+                            </div>
+                            <?php endforeach; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                    
+                    <!-- Includes & Excludes -->
+                    <?php if ($includes || $excludes) : ?>
+                    <div style="margin-bottom: 40px;">
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+                            <?php if ($includes) : ?>
+                            <div style="background: #f0fdf4; padding: 24px; border-radius: 16px;">
+                                <h3 style="font-size: 18px; font-weight: 700; color: #166534; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                    ✅ Included
+                                </h3>
+                                <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 8px;">
+                                    <?php foreach (explode("\n", $includes) as $item) : if (trim($item)) : ?>
+                                    <li style="color: #166534; display: flex; align-items: center; gap: 8px;">
+                                        <span style="color: #10b981;">•</span> <?php echo esc_html(trim($item)); ?>
+                                    </li>
+                                    <?php endif; endforeach; ?>
+                                </ul>
+                            </div>
+                            <?php endif; ?>
+                            
+                            <?php if ($excludes) : ?>
+                            <div style="background: #fef2f2; padding: 24px; border-radius: 16px;">
+                                <h3 style="font-size: 18px; font-weight: 700; color: #991b1b; margin-bottom: 16px; display: flex; align-items: center; gap: 8px;">
+                                    ❌ Excluded
+                                </h3>
+                                <ul style="list-style: none; padding: 0; margin: 0; display: grid; gap: 8px;">
+                                    <?php foreach (explode("\n", $excludes) as $item) : if (trim($item)) : ?>
+                                    <li style="color: #991b1b; display: flex; align-items: center; gap: 8px;">
+                                        <span style="color: #dc2626;">•</span> <?php echo esc_html(trim($item)); ?>
+                                    </li>
+                                    <?php endif; endforeach; ?>
+                                </ul>
+                            </div>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                
+                <!-- Sidebar Booking CTA / Form -->
+                <div class="tour-booking-column">
+                    <div style="position: sticky; top: 120px;">
+                        <?php if ($is_booking_detail) : ?>
+                            <div id="booking-form-section" style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);margin-bottom:16px;">
+                                <h3 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#0f172a;">Complete Booking Details</h3>
+                                <p style="margin:0;color:#64748b;font-size:14px;">Fill the form below to continue your booking.</p>
+                            </div>
+                            <?php
+                            // Full booking form on booking detail mode
+                            include get_template_directory() . '/booking-form.php';
+                            ?>
+                        <?php else : ?>
+                            <div style="background:#fff;border-radius:16px;padding:24px;box-shadow:0 4px 20px rgba(0,0,0,0.08);">
+                                <div style="font-size:28px;font-weight:800;color:#0f172a;margin-bottom:4px;">Rp <?php echo number_format($price, 0, ',', '.'); ?></div>
+                                <div style="color:#64748b;font-size:14px;margin-bottom:16px;">per person</div>
+
+                                <div style="display:grid;gap:10px;margin-bottom:20px;color:#475569;font-size:14px;">
+                                    <div>⏱️ <?php echo esc_html($duration); ?> days</div>
+                                    <div>👥 Min: <?php echo esc_html($min_pax); ?> pax</div>
+                                    <div>🎫 Quota: <?php echo esc_html($quota); ?> persons</div>
+                                </div>
+
+                                <button type="button"
+                                        class="book-tour-toggle-btn"
+                                        data-target="booking-form-inline-<?php echo esc_attr($tour_id); ?>"
+                                        data-booking-url="<?php echo esc_url(home_url('/booking-detail/?tour_id=' . $tour_id)); ?>"
+                                        style="display:block;width:100%;text-align:center;padding:14px 16px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;text-decoration:none;border:none;border-radius:12px;font-weight:700;cursor:pointer;">
+                                    🎫 Lanjut Detail Booking
+                                </button>
+                                <button type="button" class="single-wishlist-btn" data-tour-id="<?php echo esc_attr($tour_id); ?>" data-in-wishlist="<?php echo $in_wishlist ? '1' : '0'; ?>" style="display:block;width:100%;margin-top:10px;text-align:center;padding:12px 16px;background:#fff;color:#334155;border:1px solid #cbd5e1;border-radius:12px;font-weight:700;cursor:pointer;">
+                                    <?php echo $in_wishlist ? '❤️ Saved in Wishlist' : '🤍 Save to Wishlist'; ?>
+                                </button>
+                            </div>
+
+                            <div id="booking-form-inline-<?php echo esc_attr($tour_id); ?>" class="booking-form-inline" style="display:none; margin-top:16px;">
+                                <div style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 4px 20px rgba(0,0,0,0.08);margin-bottom:16px;">
+                                    <h3 style="margin:0 0 8px;font-size:20px;font-weight:800;color:#0f172a;">Complete Booking Details</h3>
+                                    <p style="margin:0;color:#64748b;font-size:14px;">Fill the form below to continue your booking.</p>
+                                </div>
+                                <?php include get_template_directory() . '/booking-form.php'; ?>
+                            </div>
+                        <?php endif; ?>
+                    </div>
+                </div>
+                
+            </div>
+        </section>
+    <!-- Reviews Section -->
+    <?php include get_template_directory() . '/tour-reviews-section.php'; ?>
+    
+    </article>
+</main>
+
+<?php endwhile; ?>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    var buttons = document.querySelectorAll('.book-tour-toggle-btn');
+    buttons.forEach(function (btn) {
+        btn.addEventListener('click', function () {
+            var bookingUrl = btn.getAttribute('data-booking-url');
+            if (bookingUrl) {
+                window.location.href = bookingUrl;
+                return;
+            }
+
+            var targetId = btn.getAttribute('data-target');
+            var target = document.getElementById(targetId);
+            if (!target) return;
+
+            var isOpen = target.style.display !== 'none';
+            target.style.display = isOpen ? 'none' : 'block';
+            btn.textContent = isOpen ? '🎫 Book This Tour' : '✖ Close Booking Form';
+
+            if (!isOpen) {
+                setTimeout(function () {
+                    target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+                }, 80);
+            }
+        });
+    });
+
+    var wlBtn = document.querySelector('.single-wishlist-btn');
+    if (wlBtn) {
+        wlBtn.addEventListener('click', async function () {
+            if (!window.contenlyBooking) {
+                window.location.href = '/login?redirect_to=' + encodeURIComponent(window.location.pathname);
+                return;
+            }
+            var fd = new FormData();
+            fd.append('action', 'contenly_toggle_wishlist');
+            fd.append('tour_id', wlBtn.getAttribute('data-tour-id'));
+            fd.append('nonce', window.contenlyBooking.nonce || '');
+            wlBtn.disabled = true;
+            try {
+                const res = await fetch('/wp-admin/admin-ajax.php', { method: 'POST', body: fd });
+                const data = await res.json();
+                if (data.success) {
+                    const inWl = !!data.data.in_wishlist;
+                    wlBtn.setAttribute('data-in-wishlist', inWl ? '1' : '0');
+                    wlBtn.innerHTML = inWl ? '❤️ Saved in Wishlist' : '🤍 Save to Wishlist';
+                }
+            } catch (e) {}
+            wlBtn.disabled = false;
+        });
+    }
+});
+</script>
+
+<style>
+.tour-single {
+    overflow-x: hidden;
+}
+
+@media (max-width: 1024px) {
+    .tour-content-grid {
+        grid-template-columns: 1fr !important;
+        gap: 24px !important;
+    }
+}
+
+@media (max-width: 768px) {
+    .tour-hero-image {
+        min-height: 300px !important;
+    }
+
+    .tour-content-section {
+        padding: 24px 12px !important;
+    }
+
+    .tour-content-grid {
+        gap: 18px !important;
+    }
+
+    .tour-content-grid > div {
+        min-width: 0;
+    }
+
+    .tour-booking-column {
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+    }
+
+    .tour-booking-column > div {
+        position: static !important;
+        width: 100% !important;
+        max-width: 100% !important;
+        margin: 0 auto !important;
+    }
+}
+</style>
+
+<?php get_footer(); ?>

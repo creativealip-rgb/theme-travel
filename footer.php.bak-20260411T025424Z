@@ -1,0 +1,91 @@
+<?php
+/**
+ * The footer for our theme
+ *
+ * @package Contenly_Theme
+ * @since 1.0.0
+ */
+?>
+
+    <footer id="colophon" class="site-footer" style="background:#f8fafc !important; border-top:1px solid #e2e8f0 !important; padding:52px 0 24px !important; margin-top:0 !important; clear:both !important;">
+        <div class="site-container" style="display:block !important; height:auto !important;">
+
+            <div style="display:grid; grid-template-columns:1.1fr .9fr 1fr 1fr; gap:28px; margin-bottom:28px;">
+
+                <div>
+                    <div style="font-size:1.9rem; font-weight:800; color:#2563eb; line-height:1; margin-bottom:10px;"><?php bloginfo('name'); ?></div>
+                    <p style="margin:0 0 14px; color:#4b5563; line-height:1.75; font-size:14px; max-width:360px;">
+                        Partner perjalanan untuk itinerary yang rapi, harga transparan, dan support cepat dari awal sampai trip selesai.
+                    </p>
+
+                </div>
+
+                <div>
+                    <h4 style="margin:0 0 10px; font-size:18px; color:#111827;">Informasi</h4>
+                    <ul class="footer-links" style="list-style:none; padding:0; margin:0; display:grid; gap:8px;">
+                        <li><a href="<?php echo esc_url(home_url('/about')); ?>" style="text-decoration:none; color:#374151;">Tentang Kami</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/faq')); ?>" style="text-decoration:none; color:#374151;">FAQ</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/privacy')); ?>" style="text-decoration:none; color:#374151;">Kebijakan Privasi</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/terms')); ?>" style="text-decoration:none; color:#374151;">Syarat & Ketentuan</a></li>
+                        <li><a href="<?php echo esc_url(home_url('/contact')); ?>" style="text-decoration:none; color:#374151;">Hubungi Kami</a></li>
+                    </ul>
+                </div>
+
+                <div>
+                    <h4 style="margin:0 0 10px; font-size:18px; color:#111827;">Kontak</h4>
+                    <div style="display:grid; gap:10px; color:#374151; font-size:14px; line-height:1.65;">
+                        <div>
+                            <strong style="display:block; color:#111827;">Office 1</strong>
+                            Jakarta, Indonesia
+                        </div>
+                        <div>
+                            <strong style="display:block; color:#111827;">Office 2</strong>
+                            Tangerang, Banten
+                        </div>
+                        <div>(021) 2274 0870</div>
+                        <div>hello@travelship.id</div>
+                        <div>Senin–Sabtu: 09:00–18:00</div>
+                    </div>
+                </div>
+
+                <div>
+                    <h4 style="margin:0 0 10px; font-size:18px; color:#111827;">Lokasi Kantor</h4>
+                    <div style="border:1px solid #d1d5db; border-radius:10px; overflow:hidden; background:#fff; height:190px;">
+                        <iframe
+                            title="Lokasi Ganesha Travel"
+                            src="https://maps.google.com/maps?q=jakarta&t=&z=12&ie=UTF8&iwloc=&output=embed"
+                            width="100%"
+                            height="190"
+                            style="border:0; display:block;"
+                            loading="lazy"
+                            referrerpolicy="no-referrer-when-downgrade"></iframe>
+                    </div>
+                </div>
+
+            </div>
+
+            <div style="border-top:1px solid #d1d5db; padding-top:14px; text-align:center; color:#6b7280; font-size:12px;">
+                Copyright © <?php echo date('Y'); ?> <?php bloginfo('name'); ?>. All rights reserved.
+            </div>
+
+        </div>
+
+        <style>
+        #colophon .footer-links a{transition:color .2s ease}
+        #colophon .footer-links a:hover{color:#2563eb !important}
+        @media (max-width: 1024px){
+            #colophon .site-container > div:first-child{grid-template-columns:1fr 1fr !important}
+        }
+        @media (max-width: 700px){
+            #colophon{padding:38px 0 18px !important}
+            #colophon .site-container > div:first-child{grid-template-columns:1fr !important; gap:22px !important}
+        }
+        </style>
+    </footer>
+
+</div><!-- #page -->
+
+<?php wp_footer(); ?>
+
+</body>
+</html>

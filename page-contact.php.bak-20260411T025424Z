@@ -1,0 +1,209 @@
+<?php
+/**
+ * Template Name: Contact Page
+ */
+
+get_header();
+$success=''; $error='';
+
+if(isset($_POST['contact_submit'])){
+  $name = sanitize_text_field($_POST['name'] ?? '');
+  $email = sanitize_email($_POST['email'] ?? '');
+  $phone = sanitize_text_field($_POST['phone'] ?? '');
+  $service = sanitize_text_field($_POST['service'] ?? '');
+  $destination = sanitize_text_field($_POST['destination'] ?? '');
+  $travel_date = sanitize_text_field($_POST['travel_date'] ?? '');
+  $pax = sanitize_text_field($_POST['pax'] ?? '');
+  $budget = sanitize_text_field($_POST['budget'] ?? '');
+  $message = sanitize_textarea_field($_POST['message'] ?? '');
+
+  if(!$name || !$email || !$service || !$message){
+    $error='Mohon lengkapi kolom wajib (nama, email, jenis kebutuhan, dan detail kebutuhan).';
+  } elseif(!is_email($email)){
+    $error='Format email belum valid.';
+  } else {
+    $to = get_option('admin_email');
+    $subject_line = '[Ganesha Travel] Enquiry Baru - '.($service ?: 'General');
+    $headers = ['Content-Type: text/html; charset=UTF-8','Reply-To: '.$email];
+
+    $body = '<h3>Enquiry Baru dari Contact Page</h3>'
+      .'<p><b>Nama:</b> '.esc_html($name).'</p>'
+      .'<p><b>Email:</b> '.esc_html($email).'</p>'
+      .'<p><b>No. WhatsApp:</b> '.esc_html($phone).'</p>'
+      .'<p><b>Jenis kebutuhan:</b> '.esc_html($service).'</p>'
+      .'<p><b>Tujuan:</b> '.esc_html($destination).'</p>'
+      .'<p><b>Tanggal rencana:</b> '.esc_html($travel_date).'</p>'
+      .'<p><b>Jumlah pax:</b> '.esc_html($pax).'</p>'
+      .'<p><b>Budget:</b> '.esc_html($budget).'</p>'
+      .'<p><b>Detail kebutuhan:</b><br>'.nl2br(esc_html($message)).'</p>';
+
+    if(wp_mail($to,$subject_line,$body,$headers)) {
+      $success='Terima kasih! Request kamu sudah masuk. Tim kami akan respon maksimal 2 jam kerja.';
+    } else {
+      $error='Maaf, sistem email sedang sibuk. Coba lagi beberapa saat atau hubungi WhatsApp kami.';
+    }
+  }
+}
+?>
+
+<main class="site-main contact-page-v2">
+  <section class="ct-hero">
+    <div class="site-container ct-hero-inner">
+      <p class="ct-eyebrow">Contact</p>
+      <h1>Konsultasi trip kamu, gratis.</h1>
+      <p class="ct-lead">Untuk custom itinerary, family trip, corporate outing, atau open trip — kirim kebutuhanmu. Tim kami bantu susun opsi terbaik sesuai budget.</p>
+
+      <div class="ct-quick-actions">
+        <a class="ct-btn wa" href="https://wa.me/6281234567890?text=Halo%20Ganesha%20Travel,%20saya%20ingin%20konsultasi%20trip" target="_blank" rel="noopener">Chat WhatsApp</a>
+        <a class="ct-btn ghost" href="tel:+6281234567890">Telepon Kami</a>
+      </div>
+      <p class="ct-sla">⏱️ Estimasi respon: maksimal 2 jam kerja (Senin–Sabtu, 09.00–18.00 WIB)</p>
+    </div>
+  </section>
+
+  <section class="ct-section">
+    <div class="site-container ct-grid">
+      <article class="ct-card form-card">
+        <h2>Detail kebutuhan perjalanan</h2>
+        <p class="sub">Semakin detail infonya, semakin cepat kami kirim opsi itinerary & estimasi biaya yang relevan.</p>
+
+        <?php if($success): ?><div class="alert ok"><?php echo esc_html($success); ?></div><?php endif; ?>
+        <?php if($error): ?><div class="alert err"><?php echo esc_html($error); ?></div><?php endif; ?>
+
+        <form method="post" class="ct-form">
+          <div class="grid-2">
+            <div>
+              <label>Nama Lengkap *</label>
+              <input type="text" name="name" value="<?php echo esc_attr($_POST['name'] ?? ''); ?>" required>
+            </div>
+            <div>
+              <label>Email *</label>
+              <input type="email" name="email" value="<?php echo esc_attr($_POST['email'] ?? ''); ?>" required>
+            </div>
+          </div>
+
+          <div class="grid-2">
+            <div>
+              <label>No. WhatsApp</label>
+              <input type="text" name="phone" placeholder="08xxxxxxxxxx" value="<?php echo esc_attr($_POST['phone'] ?? ''); ?>">
+            </div>
+            <div>
+              <label>Jenis Kebutuhan *</label>
+              <select name="service" required>
+                <option value="">Pilih kebutuhan</option>
+                <option value="Custom Itinerary" <?php selected(($_POST['service'] ?? ''), 'Custom Itinerary'); ?>>Custom Itinerary</option>
+                <option value="Paket Tour" <?php selected(($_POST['service'] ?? ''), 'Paket Tour'); ?>>Paket Tour</option>
+                <option value="Corporate Trip" <?php selected(($_POST['service'] ?? ''), 'Corporate Trip'); ?>>Corporate Trip</option>
+                <option value="Family Trip" <?php selected(($_POST['service'] ?? ''), 'Family Trip'); ?>>Family Trip</option>
+                <option value="Airport Transfer / Rental" <?php selected(($_POST['service'] ?? ''), 'Airport Transfer / Rental'); ?>>Airport Transfer / Rental</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="grid-3">
+            <div>
+              <label>Tujuan</label>
+              <input type="text" name="destination" placeholder="Contoh: Bali, Labuan Bajo, Jepang" value="<?php echo esc_attr($_POST['destination'] ?? ''); ?>">
+            </div>
+            <div>
+              <label>Tanggal Rencana</label>
+              <input type="text" name="travel_date" placeholder="Contoh: 20-24 Mei 2026" value="<?php echo esc_attr($_POST['travel_date'] ?? ''); ?>">
+            </div>
+            <div>
+              <label>Jumlah Pax</label>
+              <input type="text" name="pax" placeholder="Contoh: 4 Orang" value="<?php echo esc_attr($_POST['pax'] ?? ''); ?>">
+            </div>
+          </div>
+
+          <div>
+            <label>Budget Range</label>
+            <select name="budget">
+              <option value="">Pilih estimasi budget</option>
+              <option value="< 5 juta" <?php selected(($_POST['budget'] ?? ''), '< 5 juta'); ?>>&lt; 5 juta</option>
+              <option value="5 - 15 juta" <?php selected(($_POST['budget'] ?? ''), '5 - 15 juta'); ?>>5 - 15 juta</option>
+              <option value="15 - 30 juta" <?php selected(($_POST['budget'] ?? ''), '15 - 30 juta'); ?>>15 - 30 juta</option>
+              <option value="> 30 juta" <?php selected(($_POST['budget'] ?? ''), '> 30 juta'); ?>>&gt; 30 juta</option>
+            </select>
+          </div>
+
+          <div>
+            <label>Detail Kebutuhan *</label>
+            <textarea name="message" rows="6" placeholder="Ceritakan kebutuhanmu: tipe trip, preferensi hotel/transport, aktivitas utama, dll" required><?php echo esc_textarea($_POST['message'] ?? ''); ?></textarea>
+          </div>
+
+          <button type="submit" name="contact_submit">Kirim Request Konsultasi</button>
+        </form>
+      </article>
+
+      <aside class="ct-card side-card">
+        <h2>Informasi Kontak</h2>
+        <div class="info-list">
+          <div class="info-item"><strong><span>📍</span>Alamat Kantor</strong><span>Jakarta, Indonesia</span></div>
+          <div class="info-item"><strong><span>✉️</span>Email</strong><span>hello@travelship.id</span></div>
+          <div class="info-item"><strong><span>💬</span>WhatsApp</strong><span>+62 812 3456 7890</span></div>
+          <div class="info-item"><strong><span>🕘</span>Jam Operasional</strong><span>Senin – Sabtu, 09.00 – 18.00 WIB</span></div>
+        </div>
+
+        <div class="mini-cta">
+          <h3>Butuh respon cepat?</h3>
+          <p>Klik WhatsApp untuk konsultasi langsung dengan tim kami.</p>
+          <a class="ct-btn wa" href="https://wa.me/6281234567890?text=Halo%20Ganesha%20Travel,%20saya%20ingin%20konsultasi%20trip" target="_blank" rel="noopener">Chat WhatsApp</a>
+        </div>
+      </aside>
+    </div>
+  </section>
+</main>
+
+<style>
+.contact-page-v2{background:#f6f9ff}
+.ct-hero{padding:82px 0 52px;background:linear-gradient(140deg,#1d4ed8,#2563eb 42%,#3b82f6);color:#eef5ff;text-align:center}
+.ct-eyebrow{margin:0 0 8px;font-size:12px;letter-spacing:.08em;text-transform:uppercase;font-weight:800;opacity:.92}
+.ct-hero h1{margin:0 0 10px;font-size:clamp(34px,5vw,56px);line-height:1.05;color:#fff}
+.ct-lead{margin:0 auto;max-width:860px;font-size:18px;line-height:1.7}
+.ct-quick-actions{margin-top:20px;display:flex;justify-content:center;gap:10px;flex-wrap:wrap}
+.ct-btn{display:inline-flex;align-items:center;justify-content:center;height:46px;padding:0 18px;border-radius:12px;text-decoration:none;font-weight:700;transition:transform .22s ease,box-shadow .22s ease,filter .22s ease}
+.ct-btn:hover{transform:translateY(-1px)}
+.ct-btn.wa{background:#16a34a;color:#fff;box-shadow:0 10px 22px rgba(22,163,74,.28)}
+.ct-btn.wa:hover{box-shadow:0 14px 28px rgba(22,163,74,.34);filter:saturate(1.05)}
+.ct-btn.ghost{border:1px solid rgba(255,255,255,.5);color:#e2e8f0}
+.ct-sla{margin-top:12px;font-size:14px;color:#dbeafe}
+
+.ct-section{padding:54px 0 72px}
+.site-main .site-container.ct-grid{display:grid !important;grid-template-columns:minmax(0,1fr) 360px;gap:20px;align-items:start}
+.ct-grid > .form-card{grid-column:1;max-width:none}
+.ct-grid > .side-card{grid-column:2}
+.ct-card{background:#fff;border:1px solid #e2e8f0;border-radius:18px;padding:22px;box-shadow:0 10px 26px rgba(15,23,42,.06);transition:transform .25s ease,box-shadow .25s ease}
+.ct-card:hover{transform:translateY(-3px);box-shadow:0 18px 34px rgba(15,23,42,.10)}
+.ct-card h2{margin:0 0 8px;color:#0f172a}
+.sub{margin:0 0 14px;color:#64748b;line-height:1.65}
+
+.alert{padding:12px 14px;border-radius:12px;margin-bottom:12px;font-size:14px}
+.alert.ok{background:#dcfce7;color:#166534;border:1px solid #86efac}
+.alert.err{background:#fee2e2;color:#991b1b;border:1px solid #fca5a5}
+
+.ct-form{display:grid;gap:12px}
+.grid-2{display:grid !important;grid-template-columns:1fr 1fr;gap:10px}
+.grid-3{display:grid !important;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ct-form label{display:block;margin-bottom:6px;font-weight:700;color:#334155;font-size:14px}
+.ct-form input,.ct-form textarea,.ct-form select{width:100%;padding:12px;border:1px solid #cbd5e1;border-radius:10px;font-size:15px;background:#fff;color:#0f172a}
+.ct-form input:focus,.ct-form textarea:focus,.ct-form select:focus{outline:none;border-color:#93c5fd;box-shadow:0 0 0 3px rgba(147,197,253,.30)}
+.ct-form button{height:50px;border:0;border-radius:12px;background:linear-gradient(110deg,#1d4ed8,#3b82f6);color:#fff;font-weight:800;font-size:16px;cursor:pointer;transition:transform .2s ease,box-shadow .2s ease}
+.ct-form button:hover{transform:translateY(-1px);box-shadow:0 14px 28px rgba(37,99,235,.35)}
+
+.info-list{display:grid;gap:10px;margin-bottom:16px}
+.info-item{border:1px solid #e2e8f0;border-radius:12px;padding:12px;background:#fbfdff}
+.info-item strong{display:flex;align-items:center;gap:8px;color:#0f172a;margin-bottom:4px}
+.info-item strong span{display:inline-flex;width:16px;justify-content:center}
+.info-item span{color:#64748b;line-height:1.6}
+.mini-cta{background:#eff6ff;border:1px solid #bfdbfe;border-radius:14px;padding:14px}
+.mini-cta h3{margin:0 0 6px;color:#1e3a8a}
+.mini-cta p{margin:0 0 10px;color:#475569;line-height:1.6}
+
+@media(max-width:900px){
+  .site-main .site-container.ct-grid{grid-template-columns:1fr !important}
+  .ct-grid > .form-card,.ct-grid > .side-card{grid-column:auto}
+  .grid-2,.grid-3{grid-template-columns:1fr}
+}
+</style>
+
+<?php get_footer(); ?>

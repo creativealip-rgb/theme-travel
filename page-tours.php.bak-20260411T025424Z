@@ -1,0 +1,217 @@
+<?php
+/**
+ * Template Name: Tour Packages Page
+ */
+get_header();
+$wishlist_ids = [];
+if (is_user_logged_in()) {
+  $wishlist_ids = get_user_meta(get_current_user_id(), '_member_wishlist', true);
+  if (!is_array($wishlist_ids)) $wishlist_ids = [];
+  $wishlist_ids = array_map('absint', $wishlist_ids);
+}
+?>
+
+<main class="site-main tours-page">
+  <section class="tours-hero">
+    <div class="site-container">
+      <h1>Paket Tour Pilihan</h1>
+      <p>Temukan destinasi terbaik dengan itinerary yang sudah dikurasi tim Ganesha Travel.</p>
+      <form class="tours-search" onsubmit="event.preventDefault();">
+        <input type="text" placeholder="Cari destinasi atau nama tour..." />
+        <button type="submit">Cari</button>
+      </form>
+    </div>
+  </section>
+
+  <section class="tours-section">
+    <div class="site-container">
+      <h2 class="section-title">Destinasi Populer</h2>
+      <div class="dest-grid">
+        <?php
+        $categories = get_terms([
+          'taxonomy' => 'travel_category',
+          'hide_empty' => true,
+        ]);
+        if (!is_wp_error($categories) && !empty($categories)) :
+          foreach ($categories as $cat) : ?>
+            <article class="dest-card">
+              <div class="dest-icon" aria-hidden="true">✦</div>
+              <h3><?php echo esc_html($cat->name); ?></h3>
+              <p><?php echo esc_html($cat->count); ?> paket tersedia</p>
+              <a href="<?php echo esc_url(get_term_link($cat)); ?>">Lihat destinasi →</a>
+            </article>
+          <?php endforeach;
+        else : ?>
+          <p class="empty">Belum ada destinasi populer saat ini.</p>
+        <?php endif; ?>
+      </div>
+    </div>
+  </section>
+
+  <section class="tours-section tours-list-wrap">
+    <div class="site-container">
+      <h2 class="section-title">Daftar Paket Tour</h2>
+
+      <div class="tour-filter-bar" aria-label="Filter paket tour">
+        <button type="button" class="tour-filter-chip active" data-filter="all">Semua</button>
+        <button type="button" class="tour-filter-chip" data-filter="solo">Solo</button>
+        <button type="button" class="tour-filter-chip" data-filter="family">Family</button>
+        <button type="button" class="tour-filter-chip" data-filter="backpacker">Backpacker</button>
+      </div>
+
+      <div class="tours-grid">
+        <?php
+        $tours = new WP_Query([
+          'post_type' => 'tour',
+          'posts_per_page' => -1,
+          'post_status' => 'publish',
+        ]);
+
+        if ($tours->have_posts()) :
+          while ($tours->have_posts()) : $tours->the_post();
+            $price = (int) get_post_meta(get_the_ID(), 'price', true);
+            $duration = get_post_meta(get_the_ID(), 'duration', true);
+            $location = get_post_meta(get_the_ID(), 'location', true);
+            $title_l = strtolower(get_the_title());
+            $loc_l = strtolower((string)$location);
+            $duration_l = strtolower((string)$duration);
+            $tags = ['all'];
+            if (preg_match('/solo|explorer|city tour|private/i', $title_l.' '.$loc_l.' '.$duration_l)) $tags[] = 'solo';
+            if (preg_match('/family|keluarga|kids|anak|resort/i', $title_l.' '.$loc_l.' '.$duration_l)) $tags[] = 'family';
+            if (preg_match('/backpacker|budget|adventure|camp|hiking/i', $title_l.' '.$loc_l.' '.$duration_l)) $tags[] = 'backpacker';
+            if (count($tags) === 1) {
+              // fallback categorization so each card appears in at least one tab
+              if (strpos($loc_l,'indonesia') !== false || strpos($title_l,'bali') !== false) $tags[] = 'family';
+              elseif (strpos($title_l,'tour') !== false) $tags[] = 'solo';
+              else $tags[] = 'backpacker';
+            }
+            $tag_attr = implode(',', array_unique($tags));
+            ?>
+            <article class="tour-card" data-tags="<?php echo esc_attr($tag_attr); ?>">
+              <a href="<?php the_permalink(); ?>" class="tour-media">
+                <?php if (has_post_thumbnail()) :
+                  the_post_thumbnail('medium_large', ['style' => 'width:100%;height:100%;object-fit:cover;']);
+                else : ?>
+                  <div class="tour-media-fallback"><span>Ganesha Tour</span></div>
+                <?php endif; ?>
+              </a>
+              <div class="tour-body">
+                <h3><a href="<?php the_permalink(); ?>"><?php the_title(); ?></a></h3>
+                <p class="tour-meta"><span class="meta-dot"></span><?php echo esc_html($location ?: 'Destinasi'); ?></p>
+                <p class="tour-duration"><span class="meta-dot"></span><?php echo esc_html($duration ?: '-'); ?> · Rating 4.9</p>
+                <div class="tour-price-label">Mulai dari</div>
+                <div class="tour-price">IDR <?php echo number_format($price, 0, ',', '.'); ?></div>
+                <div style="display:grid;grid-template-columns:1fr auto;gap:8px;align-items:center;">
+                <a href="<?php the_permalink(); ?>" class="tour-btn" style="margin:0;">Lihat Detail</a>
+                <button type="button" class="tour-wishlist-btn" data-tour-id="<?php echo get_the_ID(); ?>" data-in-wishlist="<?php echo in_array(get_the_ID(), $wishlist_ids, true) ? '1' : '0'; ?>" style="height:40px;min-width:44px;border:1px solid #cbd5e1;border-radius:999px;background:#fff;cursor:pointer;font-size:18px;line-height:1;">
+                  <?php echo in_array(get_the_ID(), $wishlist_ids, true) ? '❤️' : '🤍'; ?>
+                </button>
+              </div>
+              </div>
+            </article>
+          <?php endwhile;
+          wp_reset_postdata();
+        else : ?>
+          <p class="empty">Belum ada paket tour tersedia. Cek lagi sebentar ya.</p>
+        <?php endif; ?>
+      </div>
+    </div>
+  </section>
+</main>
+
+<style>
+.tours-hero{padding:72px 0;background:linear-gradient(135deg,#1d4ed8,#0ea5e9);color:#fff;text-align:center}
+.tours-hero h1{margin:0 0 10px;font-size:clamp(32px,4vw,48px)}
+.tours-hero p{margin:0 auto 22px;max-width:740px;font-size:18px;opacity:.95}
+.tours-search{max-width:760px;margin:0 auto;display:grid;grid-template-columns:1fr auto;gap:10px;background:rgba(255,255,255,.15);padding:10px;border-radius:14px}
+.tours-search input{height:46px;border:0;border-radius:10px;padding:0 14px}
+.tours-search button{height:46px;border:0;border-radius:10px;padding:0 22px;background:#fff;color:#1d4ed8;font-weight:700}
+
+.tours-section{padding:56px 0}
+.tours-list-wrap{background:#f8fafc}
+.section-title{font-size:30px;margin:0 0 20px;color:#0f172a;text-align:center}
+.tour-filter-bar{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:22px}
+.tour-filter-chip{padding:9px 14px;border-radius:999px;border:1px solid #cbd5e1;background:#fff;color:#334155;font-weight:600;cursor:pointer;transition:.2s}
+.tour-filter-chip.active,.tour-filter-chip:hover{background:#2563eb;color:#fff;border-color:#2563eb}
+.dest-grid,.tours-grid{display:grid;gap:18px}
+.dest-grid{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+.tours-grid{grid-template-columns:repeat(4,minmax(0,1fr))}
+.dest-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;padding:18px;text-align:center;box-shadow:0 8px 20px rgba(15,23,42,.05)}
+.dest-icon{width:42px;height:42px;border-radius:12px;display:grid;place-items:center;background:#dbeafe;color:#1d4ed8;font-size:18px;font-weight:800;margin:0 auto 10px}
+.dest-card h3{margin:0 0 6px;color:#0f172a}
+.dest-card p{margin:0 0 10px;color:#64748b}
+.dest-card a{color:#2563eb;text-decoration:none;font-weight:700}
+
+.tour-card{background:#fff;border:1px solid #e2e8f0;border-radius:16px;overflow:hidden;display:flex;flex-direction:column;height:100%;box-shadow:0 8px 20px rgba(15,23,42,.08);transition:transform .22s ease,box-shadow .22s ease}
+.tour-card:hover{transform:translateY(-3px);box-shadow:0 16px 30px rgba(15,23,42,.12)}
+.tour-media{display:block;height:165px;overflow:hidden;flex:0 0 165px}
+.tour-media img{width:100%;height:100%;object-fit:cover}
+.tour-media-fallback{height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1d4ed8,#38bdf8);color:#fff}
+.tour-media-fallback span{font-weight:700;letter-spacing:.03em}
+.tour-body{padding:14px;display:flex;flex-direction:column;gap:8px;flex:1}
+.tour-body h3{margin:0;font-size:18px;line-height:1.35;min-height:48px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.tour-body h3 a{text-decoration:none;color:#0f172a}
+.tour-meta,.tour-duration{margin:0;color:#64748b;font-size:13px;min-height:18px;display:flex;align-items:center;gap:7px}
+.meta-dot{width:7px;height:7px;border-radius:999px;background:#93c5fd;display:inline-block}
+.tour-price-label{font-size:12px;color:#64748b;margin-top:auto}
+.tour-price{font-size:24px;font-weight:800;color:#1d4ed8;line-height:1.2}
+.tour-btn{display:block;text-align:center;text-decoration:none;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;padding:10px 12px;border-radius:999px;font-weight:700;font-size:14px}
+.empty{text-align:center;color:#64748b}
+
+@media (max-width: 1200px){
+  .tours-grid{grid-template-columns:repeat(3,minmax(0,1fr))}
+}
+@media (max-width: 992px){
+  .tours-grid{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
+@media (max-width: 768px){
+  .tours-hero{padding:48px 0}
+  .tours-search{grid-template-columns:1fr}
+  .section-title{font-size:24px}
+  .tours-grid{grid-template-columns:1fr}
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+  const chips = document.querySelectorAll('.tour-filter-chip');
+  const cards = document.querySelectorAll('.tour-card');
+  chips.forEach(chip => {
+    chip.addEventListener('click', () => {
+      const key = chip.getAttribute('data-filter');
+      chips.forEach(c => c.classList.remove('active'));
+      chip.classList.add('active');
+      cards.forEach(card => {
+        const tags = (card.getAttribute('data-tags') || 'all').split(',').map(v=>v.trim());
+        const show = key === 'all' || tags.includes(key);
+        card.style.display = show ? '' : 'none';
+      });
+    });
+  });
+
+  const wlBtns = document.querySelectorAll('.tour-wishlist-btn');
+  wlBtns.forEach(btn => {
+    btn.addEventListener('click', async () => {
+      const tourId = btn.getAttribute('data-tour-id');
+      if (!window.contenlyBooking) { window.location.href = '/login?redirect_to=' + encodeURIComponent(window.location.pathname); return; }
+      const fd = new FormData();
+      fd.append('action','contenly_toggle_wishlist');
+      fd.append('tour_id', tourId);
+      fd.append('nonce', window.contenlyBooking.nonce || '');
+      btn.disabled = true;
+      try {
+        const res = await fetch('/wp-admin/admin-ajax.php',{method:'POST',body:fd});
+        const data = await res.json();
+        if (data.success) {
+          const inWl = !!data.data.in_wishlist;
+          btn.setAttribute('data-in-wishlist', inWl ? '1':'0');
+          btn.textContent = inWl ? '❤️' : '🤍';
+        }
+      } catch(e) {}
+      btn.disabled = false;
+    });
+  });
+});
+</script>
+
+<?php get_footer(); ?>

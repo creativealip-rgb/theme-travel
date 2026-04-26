@@ -1,0 +1,176 @@
+<?php
+/**
+ * Template Name: Booking Detail Page
+ */
+
+if (!defined('ABSPATH')) exit;
+
+if (!is_user_logged_in()) {
+    wp_redirect('/login?redirect_to=' . urlencode($_SERVER['REQUEST_URI'] ?? '/booking-detail/'));
+    exit;
+}
+
+$tour_id = isset($_GET['tour_id']) ? absint($_GET['tour_id']) : 0;
+$tour = $tour_id ? get_post($tour_id) : null;
+if (!$tour || $tour->post_type !== 'tour') {
+    wp_redirect('/tour-packages/');
+    exit;
+}
+
+$price = absint(get_post_meta($tour_id, '_tour_price', true) ?: get_post_meta($tour_id, 'price', true));
+$quota = absint(get_post_meta($tour_id, '_tour_quota', true) ?: 20);
+$min_pax = absint(get_post_meta($tour_id, '_tour_min_pax', true) ?: 1);
+$user = wp_get_current_user();
+
+get_header();
+?>
+
+<main class="site-main" style="background:#f8fafc;min-height:80vh;padding:34px 0;">
+  <div class="site-container" style="max-width:980px;margin:0 auto;padding:0 16px;">
+    <h1 style="font-size:28px;margin:0 0 8px;color:#0f172a;">Detail Booking</h1>
+    <p style="margin:0 0 18px;color:#64748b;">Lengkapi data traveler untuk proses booking tour.</p>
+
+    <div style="display:grid;grid-template-columns:1.6fr 1fr;gap:18px;" class="booking-detail-grid">
+      <section style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 6px 24px rgba(2,6,23,.08);">
+        <form id="booking-detail-form" style="display:grid;gap:14px;">
+          <input type="hidden" name="tour_id" value="<?php echo esc_attr($tour_id); ?>">
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Nama Lengkap *</label><input required type="text" name="name" value="<?php echo esc_attr($user->display_name); ?>"></div>
+            <div><label>Email *</label><input required type="email" name="email" value="<?php echo esc_attr($user->user_email); ?>"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Nomor HP *</label><input required type="tel" name="phone" value="<?php echo esc_attr(get_user_meta($user->ID, 'phone_number', true)); ?>"></div>
+            <div><label>Travel Date *</label><input required type="date" name="travel_date" min="<?php echo date('Y-m-d', strtotime('+1 day')); ?>"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Jumlah Pax *</label><input required type="number" name="pax" min="<?php echo esc_attr($min_pax); ?>" max="<?php echo esc_attr($quota); ?>" value="<?php echo esc_attr($min_pax); ?>"></div>
+            <div><label>Nationality *</label><input required type="text" name="nationality" placeholder="Indonesia"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Kota Keberangkatan *</label><input required type="text" name="departure_city" placeholder="Jakarta"></div>
+            <div><label>Jenis Identitas *</label><select required name="id_type"><option value="">Pilih</option><option>KTP</option><option>Passport</option><option>SIM</option></select></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Nomor Identitas *</label><input required type="text" name="id_number"></div>
+            <div><label>Nomor Passport</label><input type="text" name="passport_number"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Passport Expiry</label><input type="date" name="passport_expiry"></div>
+            <div><label>Perlu Visa? *</label><select required name="visa_required"><option value="">Pilih</option><option value="yes">Ya</option><option value="no">Tidak</option></select></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Status Visa</label><select name="visa_status"><option value="">Pilih</option><option value="already_have">Sudah punya</option><option value="in_process">Sedang proses</option><option value="not_yet">Belum ada</option></select></div>
+            <div><label>Nomor Visa</label><input type="text" name="visa_number"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Visa Expiry</label><input type="date" name="visa_expiry"></div>
+            <div><label>Kontak Darurat (Nama) *</label><input required type="text" name="emergency_contact_name"></div>
+          </div>
+
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;" class="row2">
+            <div><label>Kontak Darurat (HP) *</label><input required type="tel" name="emergency_contact_phone"></div>
+            <div><label>Preferensi Makanan</label><input type="text" name="dietary_requirements" placeholder="Halal/vegetarian/dll"></div>
+          </div>
+
+          <div><label>Catatan Kesehatan</label><input type="text" name="medical_notes" placeholder="Alergi, mabuk perjalanan, dll"></div>
+          <div><label>Notes / Request Tambahan</label><textarea name="notes" rows="3"></textarea></div>
+
+          <label style="display:flex;align-items:center;gap:8px;"><input type="checkbox" name="visa_assistance" value="1" style="width:auto;"> Butuh bantuan pengurusan visa</label>
+
+          <button type="submit" id="booking-detail-submit" style="height:48px;border:0;border-radius:12px;background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;font-weight:700;">Lanjut ke Pembayaran</button>
+        </form>
+      </section>
+
+      <aside style="background:#fff;border-radius:16px;padding:20px;box-shadow:0 6px 24px rgba(2,6,23,.08);height:max-content;position:sticky;top:90px;">
+        <h3 style="margin:0 0 10px;font-size:18px;color:#0f172a;"><?php echo esc_html($tour->post_title); ?></h3>
+        <p style="margin:0 0 14px;color:#64748b;font-size:14px;">Ringkasan biaya booking</p>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>Pax</span><strong id="sum-pax"><?php echo esc_html($min_pax); ?></strong></div>
+        <div style="display:flex;justify-content:space-between;margin-bottom:8px;"><span>Harga / pax</span><strong>Rp <?php echo number_format($price,0,',','.'); ?></strong></div>
+        <hr style="border:none;border-top:1px solid #e2e8f0;margin:10px 0;">
+        <div style="display:flex;justify-content:space-between;"><span>Total</span><strong id="sum-total" style="color:#2563eb;">Rp <?php echo number_format($price * $min_pax,0,',','.'); ?></strong></div>
+      </aside>
+    </div>
+  </div>
+</main>
+
+<style>
+#booking-detail-form label{display:block;margin:0 0 6px;font-weight:600;color:#0f172a;font-size:14px}
+#booking-detail-form input,#booking-detail-form select,#booking-detail-form textarea{width:100%;padding:11px 12px;border:1.6px solid #e2e8f0;border-radius:10px;font-size:14px}
+@media(max-width:900px){.booking-detail-grid{grid-template-columns:1fr !important}.row2{grid-template-columns:1fr !important}}
+</style>
+
+<script>
+jQuery(function($){
+  const basePrice = <?php echo (int)$price; ?>;
+  const $pax = $('input[name="pax"]');
+  const updateSummary = ()=>{ const pax = parseInt($pax.val()||'1',10)||1; $('#sum-pax').text(pax); $('#sum-total').text('Rp ' + (basePrice*pax).toLocaleString('id-ID')); };
+  $pax.on('input change', updateSummary); updateSummary();
+
+  $('#booking-detail-form').on('submit', function(e){
+    e.preventDefault();
+    const fd = new FormData();
+    fd.append('action','tmpb_create_booking');
+    fd.append('nonce', (window.contenlyBooking && contenlyBooking.nonce) ? contenlyBooking.nonce : '');
+    fd.append('tour_id', $('input[name="tour_id"]').val());
+
+    const data = {
+      pax: $('input[name="pax"]').val(),
+      travel_date: $('input[name="travel_date"]').val(),
+      name: $('input[name="name"]').val(),
+      email: $('input[name="email"]').val(),
+      phone: $('input[name="phone"]').val(),
+      nationality: $('input[name="nationality"]').val(),
+      departure_city: $('input[name="departure_city"]').val(),
+      id_type: $('select[name="id_type"]').val(),
+      id_number: $('input[name="id_number"]').val(),
+      passport_number: $('input[name="passport_number"]').val(),
+      passport_expiry: $('input[name="passport_expiry"]').val(),
+      visa_required: $('select[name="visa_required"]').val(),
+      visa_status: $('select[name="visa_status"]').val(),
+      visa_number: $('input[name="visa_number"]').val(),
+      visa_expiry: $('input[name="visa_expiry"]').val(),
+      visa_assistance: $('input[name="visa_assistance"]').is(':checked') ? '1' : '0',
+      emergency_contact_name: $('input[name="emergency_contact_name"]').val(),
+      emergency_contact_phone: $('input[name="emergency_contact_phone"]').val(),
+      dietary_requirements: $('input[name="dietary_requirements"]').val(),
+      medical_notes: $('input[name="medical_notes"]').val(),
+      notes: $('textarea[name="notes"]').val(),
+    };
+    fd.append('data', JSON.stringify(data));
+
+    const $btn = $('#booking-detail-submit');
+    const old = $btn.text();
+    $btn.prop('disabled',true).text('Processing...');
+
+    $.ajax({
+      url: '/wp-admin/admin-ajax.php',
+      method: 'POST',
+      data: fd,
+      processData: false,
+      contentType: false,
+      success: function(res){
+        if(res && res.success){
+          window.location.href = '/checkout/?booking_id=' + res.data.booking_id + '&code=' + encodeURIComponent(res.data.booking_code || '');
+          return;
+        }
+        alert((res && res.data && res.data.message) ? res.data.message : 'Booking failed');
+        $btn.prop('disabled',false).text(old);
+      },
+      error: function(){
+        alert('Booking failed, coba lagi.');
+        $btn.prop('disabled',false).text(old);
+      }
+    });
+  });
+});
+</script>
+
+<?php get_footer(); ?>

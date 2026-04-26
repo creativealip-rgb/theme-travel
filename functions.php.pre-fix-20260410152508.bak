@@ -1,0 +1,320 @@
+<?php
+/**
+ * Contenly Theme Functions
+ */
+
+if (!defined('ABSPATH')) {
+    exit;
+}
+
+// Load plugin integration for reviews
+require_once get_template_directory() . '/plugin-integration.php';
+
+// Load theme helper functions/tags
+require_once get_template_directory() . '/inc/template-tags.php';
+require_once get_template_directory() . '/inc/template-functions.php';
+
+/**
+ * Enqueue theme styles and scripts
+ */
+function contenly_enqueue_scripts() {
+    // Theme stylesheet
+    wp_enqueue_style('contenly-style', get_stylesheet_uri(), [], '1.0.0');
+    
+    // Google Fonts
+    wp_enqueue_style('contenly-fonts', 'https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap', [], null);
+    
+    // jQuery
+    wp_enqueue_script('jquery');
+    
+    // Booking AJAX - inline script with localized data
+    $booking_config = [
+        'ajaxUrl' => admin_url('admin-ajax.php'),
+        'nonce' => wp_create_nonce('tmpb_booking_nonce'),
+        'i18n' => [
+            'bookingError' => 'Booking failed',
+            'processing' => 'Processing...'
+        ]
+    ];
+    
+    wp_add_inline_script('jquery', 'var contenlyBooking = ' . json_encode($booking_config) . ';', 'before');
+    
+    // Also define tmpbAjax for compatibility with plugin scripts
+    wp_add_inline_script('jquery', 'var tmpbAjax = ' . json_encode($booking_config) . ';', 'before');
+}
+add_action('wp_enqueue_scripts', 'contenly_enqueue_scripts');
+
+/**
+ * Theme setup
+ */
+function contenly_theme_setup() {
+    add_theme_support('title-tag');
+}
+add_action('after_setup_theme', 'contenly_theme_setup');
+
+/**
+ * Hide WP admin bar on public-facing pages (tour, member, etc.)
+ */
+if (!is_admin()) {
+    add_filter('show_admin_bar', '__return_false');
+}
+
+/**
+ * Custom document title for homepage
+ */
+function contenly_custom_home_title($title) {
+    if (is_front_page() || is_home()) {
+        return 'Ganesha Travel - Teman Travel Terbaik';
+    }
+    return $title;
+}
+add_filter('pre_get_document_title', 'contenly_custom_home_title');
+
+/**
+ * Travel Story Featured Meta Box (Admin)
+ */
+function contenly_add_featured_story_metabox() {
+    add_meta_box(
+        'contenly_featured_story',
+        'Travel Story Unggulan',
+        'contenly_render_featured_story_metabox',
+        'post',
+        'side',
+        'high'
+    );
+}
+add_action('add_meta_boxes', 'contenly_add_featured_story_metabox');
+
+function contenly_render_featured_story_metabox($post) {
+    $is_featured = get_post_meta($post->ID, '_is_featured_travel_story', true) === '1';
+    wp_nonce_field('contenly_featured_story_nonce', 'contenly_featured_story_nonce_field');
+    echo '<label style="display:flex; gap:8px; align-items:center;">';
+    echo '<input type="checkbox" name="contenly_is_featured_story" value="1" ' . checked($is_featured, true, false) . ' />';
+    echo '<span>Jadikan story unggulan di homepage</span>';
+    echo '</label>';
+    echo '<p style="margin-top:8px;color:#64748b;font-size:12px;">Hanya satu postingan yang bisa jadi unggulan.</p>';
+}
+
+function contenly_save_featured_story_metabox($post_id) {
+    if (defined('DOING_AUTOSAVE') && DOING_AUTOSAVE) return;
+    if (!isset($_POST['contenly_featured_story_nonce_field']) || !wp_verify_nonce($_POST['contenly_featured_story_nonce_field'], 'contenly_featured_story_nonce')) return;
+    if (!current_user_can('edit_post', $post_id)) return;
+
+    $set_featured = isset($_POST['contenly_is_featured_story']) && $_POST['contenly_is_featured_story'] === '1';
+
+    if ($set_featured) {
+        $all_featured = get_posts([
+            'post_type' => 'post',
+            'posts_per_page' => -1,
+            'post_status' => 'any',
+            'fields' => 'ids',
+            'meta_query' => [[
+                'key' => '_is_featured_travel_story',
+                'value' => '1'
+            ]]
+        ]);
+        foreach ($all_featured as $fid) {
+            if ((int)$fid !== (int)$post_id) {
+                delete_post_meta($fid, '_is_featured_travel_story');
+            }
+        }
+        update_post_meta($post_id, '_is_featured_travel_story', '1');
+    } else {
+        delete_post_meta($post_id, '_is_featured_travel_story');
+    }
+}
+add_action('save_post_post', 'contenly_save_featured_story_metabox');
+
+/**
+ * Ensure Travel Story page exists for member dashboard menu
+ */
+function contenly_ensure_travel_story_page() {
+    $page = get_page_by_path('travel-story');
+    if ($page) {
+        if (get_page_template_slug($page->ID) !== 'page-travel-story.php') {
+            update_post_meta($page->ID, '_wp_page_template', 'page-travel-story.php');
+        }
+        return;
+    }
+
+    $page_id = wp_insert_post([
+        'post_title'   => 'Travel Story',
+        'post_name'    => 'travel-story',
+        'post_type'    => 'page',
+        'post_status'  => 'publish',
+        'post_content' => 'Member Travel Story Dashboard',
+    ]);
+
+    if (!is_wp_error($page_id) && $page_id) {
+        update_post_meta($page_id, '_wp_page_template', 'page-travel-story.php');
+    }
+}
+add_action('after_switch_theme', 'contenly_ensure_travel_story_page');
+add_action('init', 'contenly_ensure_travel_story_page');
+
+/**
+ * Ensure public Blog page exists
+ */
+function contenly_ensure_blog_page() {
+    $page = get_page_by_path('blog');
+    if ($page) {
+        if (get_page_template_slug($page->ID) !== 'page-blog.php') {
+            update_post_meta($page->ID, '_wp_page_template', 'page-blog.php');
+        }
+        return;
+    }
+
+    $page_id = wp_insert_post([
+        'post_title'   => 'Blog',
+        'post_name'    => 'blog',
+        'post_type'    => 'page',
+        'post_status'  => 'publish',
+        'post_content' => 'Public blog listing page',
+    ]);
+
+    if (!is_wp_error($page_id) && $page_id) {
+        update_post_meta($page_id, '_wp_page_template', 'page-blog.php');
+    }
+}
+add_action('after_switch_theme', 'contenly_ensure_blog_page');
+add_action('init', 'contenly_ensure_blog_page');
+
+/**
+ * Ensure Booking Detail page exists
+ */
+function contenly_ensure_booking_detail_page() {
+    $page = get_page_by_path('booking-detail');
+    if ($page) {
+        if (get_page_template_slug($page->ID) !== 'page-booking-detail.php') {
+            update_post_meta($page->ID, '_wp_page_template', 'page-booking-detail.php');
+        }
+        return;
+    }
+
+    $page_id = wp_insert_post([
+        'post_title'   => 'Booking Detail',
+        'post_name'    => 'booking-detail',
+        'post_type'    => 'page',
+        'post_status'  => 'publish',
+        'post_content' => 'Booking detail page',
+    ]);
+
+    if (!is_wp_error($page_id) && $page_id) {
+        update_post_meta($page_id, '_wp_page_template', 'page-booking-detail.php');
+    }
+}
+add_action('after_switch_theme', 'contenly_ensure_booking_detail_page');
+add_action('init', 'contenly_ensure_booking_detail_page');
+
+/**
+ * Replace Travel Story menu label/url with Blog for public navigation
+ */
+function contenly_replace_travel_story_menu($items, $args) {
+    if (!isset($args->theme_location) || $args->theme_location !== 'primary') {
+        return $items;
+    }
+
+    // Normalize Travel Story -> Blog and collect links by key
+    $by_key = [];
+    foreach ($items as $item) {
+        $title = strtolower(trim(wp_strip_all_tags($item->title)));
+        $url = $item->url;
+
+        if ($title === 'travel story' || strpos($url, '/travel-story') !== false) {
+            $item->title = 'Blog';
+            $item->url = home_url('/blog/');
+            $title = 'blog';
+        }
+
+        if ($title === 'home' || rtrim($item->url, '/') === rtrim(home_url('/'), '/')) $by_key['home'] = $item;
+        if (in_array($title, ['about', 'about us'])) $by_key['about'] = $item;
+        if (in_array($title, ['tour packages', 'tour package'])) $by_key['tour'] = $item;
+        if ($title === 'blog' || strpos($item->url, '/blog') !== false) $by_key['blog'] = $item;
+        if (in_array($title, ['contact', 'contact us']) || strpos($item->url, '/contact') !== false) $by_key['contact'] = $item;
+    }
+
+    // Create missing core items if needed
+    $mk = function($title, $path, $id) {
+        $o = new stdClass();
+        $o->ID = -$id;
+        $o->db_id = 0;
+        $o->menu_item_parent = 0;
+        $o->object_id = 0;
+        $o->object = 'custom';
+        $o->type = 'custom';
+        $o->type_label = 'Custom Link';
+        $o->title = $title;
+        $o->url = home_url($path);
+        $o->target = '';
+        $o->attr_title = '';
+        $o->description = '';
+        $o->classes = [];
+        $o->xfn = '';
+        $o->status = 'publish';
+        return $o;
+    };
+
+    if (!isset($by_key['home'])) $by_key['home'] = $mk('Home', '/', 1);
+    if (!isset($by_key['about'])) $by_key['about'] = $mk('About Us', '/about/', 2);
+    if (!isset($by_key['tour'])) $by_key['tour'] = $mk('Tour Packages', '/tour-packages/', 3);
+    if (!isset($by_key['blog'])) $by_key['blog'] = $mk('Blog', '/blog/', 4);
+    if (!isset($by_key['contact'])) $by_key['contact'] = $mk('Contact Us', '/contact/', 5);
+
+    // Force order as requested
+    return [
+        $by_key['home'],
+        $by_key['about'],
+        $by_key['contact'],
+        $by_key['tour'],
+        $by_key['blog'],
+    ];
+}
+add_filter('wp_nav_menu_objects', 'contenly_replace_travel_story_menu', 20, 2);
+
+/**
+ * Backward-compatible redirect: /profile -> /settings
+ */
+add_action('template_redirect', function () {
+    $req = strtok($_SERVER['REQUEST_URI'] ?? '', '?');
+    if (rtrim($req, '/') === '/profile') {
+        wp_redirect(home_url('/settings/'), 301);
+        exit;
+    }
+});
+
+
+/**
+ * AJAX: Update notification preferences
+ */
+function contenly_ajax_update_notifications() {
+    check_ajax_referer('tmpb_booking_nonce', 'nonce');
+    if (!is_user_logged_in()) {
+        wp_send_json_error(['message' => 'Please login']);
+    }
+    $uid = get_current_user_id();
+    update_user_meta($uid, '_notif_email', ($_POST['notif_email'] ?? '0') === '1' ? '1' : '0');
+    update_user_meta($uid, '_notif_whatsapp', ($_POST['notif_whatsapp'] ?? '0') === '1' ? '1' : '0');
+    update_user_meta($uid, '_notif_promo', ($_POST['notif_promo'] ?? '0') === '1' ? '1' : '0');
+    wp_send_json_success(['message' => 'Notification preferences updated']);
+}
+add_action('wp_ajax_contenly_update_notifications', 'contenly_ajax_update_notifications');
+
+
+/**
+ * Canonical paid-like statuses for booking analytics/reporting.
+ */
+function contenly_paid_like_statuses() {
+    return ['paid', 'confirmed', 'completed'];
+}
+
+/**
+ * Canonical booking amount resolver.
+ */
+function contenly_booking_total_amount($booking_id) {
+    $keys = ['_total_amount', '_total_price', '_price'];
+    foreach ($keys as $k) {
+        $v = get_post_meta($booking_id, $k, true);
+        if ($v !== '' && $v !== null) return (float) $v;
+    }
+    return 0.0;
+}

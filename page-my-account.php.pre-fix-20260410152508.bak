@@ -1,0 +1,157 @@
+<?php
+/**
+ * Template Name: My Account
+ * Redirect to new dashboard
+ */
+
+// Redirect to new dashboard
+wp_redirect('/dashboard/');
+exit;
+
+        <!-- Account Overview Grid -->
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 24px; margin-bottom: 48px;">
+            
+            <!-- Membership Card -->
+            <div style="background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="font-size: 40px;"><?php echo $tier_info['icon']; ?></div>
+                    <div>
+                        <div style="font-size: 14px; color: #64748b;">Membership Tier</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #0f172a;"><?php echo $tier_info['name']; ?></div>
+                    </div>
+                </div>
+                <a href="/membership" style="display: block; padding: 12px; background: <?php echo $tier_info['color']; ?>; color: white; text-align: center; text-decoration: none; border-radius: 12px; font-weight: 600;">
+                    <?php echo $current_tier === 'gold' ? 'Max Tier Reached' : 'Upgrade Membership'; ?>
+                </a>
+            </div>
+
+            <!-- Bookings Card -->
+            <div style="background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="font-size: 40px;">🎫</div>
+                    <div>
+                        <div style="font-size: 14px; color: #64748b;">My Bookings</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #0f172a;">View All</div>
+                    </div>
+                </div>
+                <a href="/my-bookings" style="display: block; padding: 12px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; text-align: center; text-decoration: none; border-radius: 12px; font-weight: 600;">
+                    Manage Bookings
+                </a>
+            </div>
+
+            <!-- Dashboard Card -->
+            <div style="background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="font-size: 40px;">📊</div>
+                    <div>
+                        <div style="font-size: 14px; color: #64748b;">Travel Dashboard</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #0f172a;">My Travels</div>
+                    </div>
+                </div>
+                <a href="/travel-dashboard" style="display: block; padding: 12px; background: linear-gradient(135deg, #10b981, #059669); color: white; text-align: center; text-decoration: none; border-radius: 12px; font-weight: 600;">
+                    Go to Dashboard
+                </a>
+            </div>
+
+            <!-- Tours Card -->
+            <div style="background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <div style="display: flex; align-items: center; gap: 12px; margin-bottom: 20px;">
+                    <div style="font-size: 40px;">✈️</div>
+                    <div>
+                        <div style="font-size: 14px; color: #64748b;">Browse Tours</div>
+                        <div style="font-size: 24px; font-weight: 700; color: #0f172a;">
+                            <?php 
+                            $plans = TMP_Membership_Plans::get_plans();
+                            echo $plans[$current_tier]['discount']; ?>% OFF
+                        </div>
+                    </div>
+                </div>
+                <a href="/tour-packages" style="display: block; padding: 12px; background: linear-gradient(135deg, #f59e0b, #d97706); color: white; text-align: center; text-decoration: none; border-radius: 12px; font-weight: 600;">
+                    View Tours
+                </a>
+            </div>
+
+        </div>
+
+        <!-- Account Details -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+            
+            <!-- Profile Info -->
+            <div style="background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <h2 style="font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 24px;">👤 Profile Information</h2>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 13px; color: #64748b; margin-bottom: 4px;">Full Name</div>
+                    <div style="font-size: 16px; color: #0f172a; font-weight: 600;"><?php echo esc_html($user->display_name); ?></div>
+                </div>
+                
+                <div style="margin-bottom: 16px;">
+                    <div style="font-size: 13px; color: #64748b; margin-bottom: 4px;">Email Address</div>
+                    <div style="font-size: 16px; color: #0f172a; font-weight: 600;"><?php echo esc_html($user->user_email); ?></div>
+                </div>
+                
+                <div style="margin-bottom: 24px;">
+                    <div style="font-size: 13px; color: #64748b; margin-bottom: 4px;">Member Since</div>
+                    <div style="font-size: 16px; color: #0f172a; font-weight: 600;"><?php echo date_i18n(get_option('date_format'), strtotime($user->user_registered)); ?></div>
+                </div>
+                
+                <a href="/wp-admin/profile.php" style="display: inline-block; padding: 12px 24px; background: #f1f5f9; color: #2563eb; text-decoration: none; border-radius: 12px; font-weight: 600;">
+                    Edit Profile
+                </a>
+            </div>
+
+            <!-- Membership Stats -->
+            <div style="background: white; border-radius: 20px; padding: 32px; box-shadow: 0 4px 20px rgba(0,0,0,0.08);">
+                <h2 style="font-size: 22px; font-weight: 700; color: #0f172a; margin-bottom: 24px;">📊 Your Stats</h2>
+                
+                <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                    <div style="background: #f0f9ff; padding: 20px; border-radius: 16px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700; color: #2563eb; margin-bottom: 4px;"><?php echo $booking_count; ?></div>
+                        <div style="font-size: 13px; color: #64748b;">Total Bookings</div>
+                    </div>
+                    
+                    <div style="background: #f0fdf4; padding: 20px; border-radius: 16px; text-align: center;">
+                        <div style="font-size: 32px; font-weight: 700; color: #10b981; margin-bottom: 4px;"><?php echo $plans[$current_tier]['discount']; ?>%</div>
+                        <div style="font-size: 13px; color: #64748b;">Member Discount</div>
+                    </div>
+                </div>
+                
+                <?php if ($current_tier !== 'gold') : 
+                    $next_tier = $current_tier === 'free' ? 'silver' : 'gold';
+                    $bookings_needed = $current_tier === 'free' ? 5 : 15;
+                    $progress = min(100, ($booking_count / $bookings_needed) * 100);
+                ?>
+                <div>
+                    <div style="display: flex; justify-content: space-between; margin-bottom: 8px;">
+                        <span style="font-size: 14px; color: #64748b;">Progress to <?php echo ucfirst($next_tier); ?></span>
+                        <span style="font-size: 14px; color: #64748b;"><?php echo $booking_count; ?>/<?php echo $bookings_needed; ?> bookings</span>
+                    </div>
+                    <div style="background: #e2e8f0; border-radius: 9999px; height: 8px; overflow: hidden;">
+                        <div style="width: <?php echo $progress; ?>%; background: linear-gradient(90deg, #2563eb, #3b82f6); height: 100%; border-radius: 9999px;"></div>
+                    </div>
+                </div>
+                <?php else : ?>
+                <div style="background: #fffbeb; padding: 16px; border-radius: 12px; text-align: center;">
+                    <div style="font-size: 14px; color: #b45309;">👑 You're a Gold member!</div>
+                    <div style="font-size: 13px; color: #92400e; margin-top: 4px;">Enjoy all premium benefits</div>
+                </div>
+                <?php endif; ?>
+            </div>
+
+        </div>
+
+        <!-- Quick Actions -->
+        <div style="margin-top: 48px; text-align: center;">
+            <h2 style="font-size: 24px; font-weight: 700; color: #0f172a; margin-bottom: 24px;">Quick Actions</h2>
+            <div style="display: flex; flex-wrap: wrap; gap: 12px; justify-content: center;">
+                <a href="/travel-dashboard" style="padding: 14px 28px; background: linear-gradient(135deg, #2563eb, #3b82f6); color: white; text-decoration: none; border-radius: 12px; font-weight: 600;">📍 Add Destination</a>
+                <a href="/tour-packages" style="padding: 14px 28px; background: white; color: #2563eb; border: 2px solid #2563eb; text-decoration: none; border-radius: 12px; font-weight: 600;">✈️ Book a Tour</a>
+                <a href="/wp-admin/profile.php" style="padding: 14px 28px; background: white; color: #64748b; border: 2px solid #e2e8f0; text-decoration: none; border-radius: 12px; font-weight: 600;">⚙️ Account Settings</a>
+                <a href="<?php echo wp_logout_url('/'); ?>" style="padding: 14px 28px; background: #fee2e2; color: #dc2626; text-decoration: none; border-radius: 12px; font-weight: 600;">🚪 Logout</a>
+            </div>
+        </div>
+
+    </div>
+</div>
+
+<?php get_footer(); ?>

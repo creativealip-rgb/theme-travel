@@ -1,0 +1,172 @@
+<?php
+/**
+ * Single Post Template (Travel Story)
+ */
+get_header();
+?>
+
+<main class="site-main story-page">
+    <div class="story-wrap">
+        <?php while (have_posts()) : the_post();
+            $word_count = str_word_count(wp_strip_all_tags(get_post_field('post_content', get_the_ID())));
+            $read_minutes = max(1, (int) ceil($word_count / 220));
+            $categories = get_the_category();
+            $related_tours = get_posts([
+              'post_type' => 'tour',
+              'post_status' => 'publish',
+              'posts_per_page' => 3,
+              'orderby' => 'date',
+              'order' => 'DESC',
+            ]);
+            $other_posts = get_posts([
+              'post_type' => 'post',
+              'post_status' => 'publish',
+              'posts_per_page' => 4,
+              'post__not_in' => [get_the_ID()],
+              'orderby' => 'date',
+              'order' => 'DESC',
+            ]);
+        ?>
+            <div class="story-grid">
+                <article class="story-article">
+                    <header class="story-head"><meta charset="utf-8">
+                        <div class="story-meta-row">
+                            <span><?php echo esc_html(get_the_date('d M Y')); ?></span>
+                            <span>•</span>
+                            <span><?php echo esc_html(get_the_author()); ?></span>
+                            <span>•</span>
+                            <span><?php echo esc_html($read_minutes); ?> menit baca</span>
+                        </div>
+
+                        <h1><?php the_title(); ?></h1>
+
+                        <?php if (!empty($categories)) : ?>
+                            <div class="story-cats">
+                                <?php foreach ($categories as $cat) : ?>
+                                    <a href="<?php echo esc_url(get_category_link($cat->term_id)); ?>"><?php echo esc_html($cat->name); ?></a>
+                                <?php endforeach; ?>
+                            </div>
+                        <?php endif; ?>
+
+                        <?php if (has_excerpt()) : ?>
+                            <p class="story-excerpt"><?php echo esc_html(get_the_excerpt()); ?></p>
+                        <?php endif; ?>
+                    </header>
+
+                    <?php if (has_post_thumbnail()) : ?>
+                        <figure class="story-cover">
+                            <?php the_post_thumbnail('large', ['style' => 'width:100%;height:100%;object-fit:cover;']); ?>
+                        </figure>
+                    <?php endif; ?>
+
+                    <div class="story-body">
+                        <div class="story-content">
+                            <?php the_content(); ?>
+                        </div>
+
+                        <div class="story-tip">
+                            <h3>Tips singkat dari cerita ini</h3>
+                            <p>Jangan kejar terlalu banyak spot dalam satu hari. Jadwal yang lebih longgar bikin pengalaman lebih berkesan, dan kamu pulang tanpa rasa capek berlebihan.</p>
+                        </div>
+
+                        <footer class="story-foot">
+                            <a href="<?php echo esc_url(home_url('/blog/')); ?>" class="ghost">← Kembali ke Blog</a>
+                            <a href="<?php echo esc_url(home_url('/travel-story/')); ?>" class="primary">Lihat Story Member</a>
+                        </footer>
+                    </div>
+                </article>
+
+                <aside class="story-side">
+                    <section class="side-card">
+                        <h3>Paket Tour Rekomendasi</h3>
+                        <div class="tour-mini-list">
+                            <?php foreach ($related_tours as $tour) :
+                                $price = (int) get_post_meta($tour->ID, 'price', true);
+                                $location = get_post_meta($tour->ID, 'location', true) ?: 'Destinasi Pilihan';
+                            ?>
+                                <article class="tour-mini-card">
+                                    <a href="<?php echo esc_url(get_permalink($tour)); ?>" class="tour-mini-media">
+                                        <?php if (has_post_thumbnail($tour->ID)) : ?>
+                                            <?php echo get_the_post_thumbnail($tour->ID, 'medium', ['style' => 'width:100%;height:100%;object-fit:cover;']); ?>
+                                        <?php else: ?>
+                                            <div class="tour-mini-fallback">Ganesha Tour</div>
+                                        <?php endif; ?>
+                                    </a>
+                                    <div class="tour-mini-body">
+                                        <a class="tour-mini-title" href="<?php echo esc_url(get_permalink($tour)); ?>"><?php echo esc_html(get_the_title($tour)); ?></a>
+                                        <div class="tour-mini-meta"><?php echo esc_html($location); ?> · ⭐ 4.9</div>
+                                        <div class="tour-mini-price"><?php echo $price > 0 ? 'IDR '.esc_html(number_format($price, 0, ',', '.')) : 'Hubungi kami'; ?></div>
+                                    </div>
+                                </article>
+                            <?php endforeach; ?>
+                        </div>
+                    </section>
+
+                    <section class="side-card">
+                        <h3>Artikel Lainnya</h3>
+                        <ul>
+                            <?php foreach ($other_posts as $p) : ?>
+                                <li><a href="<?php echo esc_url(get_permalink($p)); ?>"><?php echo esc_html(get_the_title($p)); ?></a></li>
+                            <?php endforeach; ?>
+                        </ul>
+                    </section>
+                </aside>
+            </div>
+        <?php endwhile; ?>
+    </div>
+</main>
+
+<style>
+.story-page{padding:34px 16px 72px;background:linear-gradient(180deg,#f8fbff 0%,#ffffff 100%)}
+.story-wrap{max-width:1220px;margin:0 auto}
+.story-grid{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;align-items:start}
+.story-article{background:#fff;border:1px solid #e2e8f0;border-radius:22px;overflow:hidden;box-shadow:0 14px 34px rgba(15,23,42,.08)}
+.story-head{padding:30px 30px 22px}
+.story-meta-row{display:flex;gap:8px;flex-wrap:wrap;color:#64748b;font-size:13px;font-weight:600;margin-bottom:12px}
+.story-head h1{font-size:clamp(30px,4vw,46px);line-height:1.14;margin:0 0 12px;color:#0f172a;letter-spacing:-.02em}
+.story-cats{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 14px}
+.story-cats a{display:inline-flex;align-items:center;height:30px;padding:0 11px;border-radius:999px;border:1px solid #dbeafe;background:#f8fbff;text-decoration:none;font-size:12px;font-weight:700;color:#1d4ed8}
+.story-excerpt{font-size:18px;color:#475569;line-height:1.78;margin:0;border-left:4px solid #bfdbfe;padding-left:14px}
+.story-cover{margin:0;aspect-ratio:16/8;overflow:hidden;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0}
+.story-body{padding:26px 30px 30px}
+.story-content{padding:0;font-size:19px;color:#334155;line-height:1.9}
+.story-content p{margin:0 0 1.1em}
+.story-content h2,.story-content h3{color:#0f172a;margin-top:1.4em;margin-bottom:.6em;line-height:1.3}
+.story-tip{margin:14px 0 0;background:linear-gradient(135deg,#eff6ff,#f8fbff);border:1px solid #dbeafe;border-radius:14px;padding:16px 16px 14px}
+.story-tip h3{margin:0 0 7px;font-size:18px;color:#1e3a8a}
+.story-tip p{margin:0;color:#475569;line-height:1.7}
+.story-foot{margin:24px 0 0;display:flex;gap:10px;flex-wrap:wrap}
+.story-foot a{display:inline-flex;align-items:center;justify-content:center;height:44px;padding:0 16px;border-radius:12px;text-decoration:none;font-weight:700}
+.story-foot .ghost{background:#fff;border:1px solid #cbd5e1;color:#334155}
+.story-foot .primary{background:linear-gradient(120deg,#2563eb,#3b82f6);color:#fff;box-shadow:0 10px 24px rgba(37,99,235,.3)}
+.story-side{position:sticky;top:20px;display:grid;gap:12px}
+.side-card{background:#f8fbff;border:1px solid #dbeafe;border-radius:14px;padding:14px}
+.side-card h3{margin:0 0 10px;font-size:16px;color:#1e3a8a}
+.side-card ul{margin:0;padding:0;list-style:none;display:grid;gap:10px}
+.side-card li{display:grid;gap:3px}
+.side-card a{text-decoration:none;color:#0f172a;font-weight:600;line-height:1.4}
+.side-card small{color:#64748b;font-size:12px}
+.tour-mini-list{display:grid;gap:10px}
+.tour-mini-card{display:grid;grid-template-columns:90px 1fr;gap:10px;background:#fff;border:1px solid #dbeafe;border-radius:12px;padding:8px}
+.tour-mini-media{display:block;height:82px;border-radius:8px;overflow:hidden}
+.tour-mini-fallback{height:100%;display:flex;align-items:center;justify-content:center;background:linear-gradient(135deg,#1d4ed8,#38bdf8);color:#fff;font-size:11px;font-weight:700;text-align:center;padding:0 6px}
+.tour-mini-body{display:grid;align-content:start;gap:5px}
+.tour-mini-title{font-size:13px;font-weight:700;line-height:1.35;text-decoration:none;color:#0f172a}
+.tour-mini-meta{font-size:12px;color:#64748b;line-height:1.35}
+.tour-mini-price{font-size:14px;font-weight:800;color:#1d4ed8;line-height:1.2}
+
+@media(max-width:980px){
+  .story-grid{grid-template-columns:1fr}
+  .story-side{position:static}
+}
+@media(max-width:768px){
+  .story-page{padding:18px 10px 42px}
+  .story-head{padding:22px 16px 18px}
+  .story-body{padding:20px 16px 22px}
+  .story-content{font-size:17px}
+  .story-tip{margin:10px 0 0}
+  .story-foot{margin:18px 0 0}
+}
+</style>
+
+<?php get_footer(); ?>
