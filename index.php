@@ -816,4 +816,41 @@ body.whaledive-home #equipment article > span:last-child:hover{
   transform:translateY(-1px)!important;
 }
 </style>
+
+<style id="wd-equipment-card-clean-final">
+/* Final equipment card cleanup: keep cards compact without cropping product PNGs. */
+body.whaledive-home #equipment .wd-equip-card{overflow:hidden!important;padding:18px 18px 17px!important}
+body.whaledive-home #equipment .wd-equip-card .wd-equip-photo{
+  height:164px!important;
+  min-height:164px!important;
+  margin:0 0 12px!important;
+  padding:14px 8px 4px!important;
+  overflow:visible!important;
+}
+body.whaledive-home #equipment .wd-equip-card .wd-equip-photo img{
+  width:100%!important;
+  height:100%!important;
+  max-width:100%!important;
+  max-height:142px!important;
+  object-fit:contain!important;
+  transform:scale(1.08)!important;
+  object-position:center center!important;
+}
+body.whaledive-home #equipment .wd-equip-card .wd-equip-link{margin-top:2px!important}
+@media(max-width:760px){
+  body.whaledive-home #equipment .wd-equip-card .wd-equip-photo{height:150px!important;min-height:150px!important;padding-top:12px!important}
+  body.whaledive-home #equipment .wd-equip-card .wd-equip-photo img{max-height:130px!important;transform:scale(1.05)!important}
+}
+</style>
+
+<style id="wd-equipment-card-clean-hard-final">
+/* Highest-priority equipment cleanup: compact cards, no cropped transparent products. */
+html body.whaledive-home #equipment.wd-eq .wd-equipment-grid .wd-equip-card{padding:18px!important;overflow:hidden!important;border-radius:22px!important}
+html body.whaledive-home #equipment.wd-eq .wd-equipment-grid .wd-equip-card .wd-equip-photo{height:164px!important;min-height:164px!important;max-height:164px!important;margin:0 0 12px!important;padding:14px 10px 4px!important;overflow:visible!important;display:flex!important;align-items:center!important;justify-content:center!important}
+html body.whaledive-home #equipment.wd-eq .wd-equipment-grid .wd-equip-card .wd-equip-photo img{width:100%!important;height:100%!important;max-width:100%!important;max-height:140px!important;object-fit:contain!important;object-position:center center!important;transform:scale(1.03)!important;padding:0!important;display:block!important}
+html body.whaledive-home #equipment.wd-eq .wd-equipment-grid .wd-equip-card h3{margin:0 0 5px!important}
+html body.whaledive-home #equipment.wd-eq .wd-equipment-grid .wd-equip-card p{margin:0 0 10px!important;min-height:0!important}
+html body.whaledive-home #equipment.wd-eq .wd-equipment-grid .wd-equip-card .wd-equip-link{margin:0!important}
+@media(max-width:760px){html body.whaledive-home #equipment.wd-eq .wd-equipment-grid .wd-equip-card .wd-equip-photo{height:150px!important;min-height:150px!important;max-height:150px!important}html body.whaledive-home #equipment.wd-eq .wd-equipment-grid .wd-equip-card .wd-equip-photo img{max-height:128px!important;transform:scale(1)!important}}
+</style>
 </body></html>
