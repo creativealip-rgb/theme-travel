@@ -1676,3 +1676,100 @@ body.single-wm_course .wd-menu .wd-nav-member{
   padding:10px 18px!important;
   font-weight:800!important;
 }
+
+/* Whale Dive inner navbar spacing sync with homepage. */
+body.whaledive-inner .wd-nav,
+body.whaledive-equipment .wd-nav,
+body.whaledive-courses .wd-nav,
+body.whaledive-about .wd-nav,
+body.whaledive-blog .wd-nav,
+body.single-wm_equipment .wd-nav,
+body.single-wm_course .wd-nav{
+  padding:14px 18px!important;
+  border-radius:0 0 26px 26px!important;
+}
+body.whaledive-inner .wd-menu,
+body.whaledive-equipment .wd-menu,
+body.whaledive-courses .wd-menu,
+body.whaledive-about .wd-menu,
+body.whaledive-blog .wd-menu,
+body.single-wm_equipment .wd-menu,
+body.single-wm_course .wd-menu{
+  display:flex!important;
+  align-items:center!important;
+  gap:26px!important;
+}
+@media(max-width:780px){
+  body.whaledive-inner .wd-menu,
+  body.whaledive-equipment .wd-menu,
+  body.whaledive-courses .wd-menu,
+  body.whaledive-about .wd-menu,
+  body.whaledive-blog .wd-menu,
+  body.single-wm_equipment .wd-menu,
+  body.single-wm_course .wd-menu{gap:0!important}
+}
+
+/* Whale Dive header brand sizing guard: keep logo compact on every page. */
+.wd-brand,
+a.wd-brand{
+  display:flex!important;
+  align-items:center!important;
+  gap:10px!important;
+  width:auto!important;
+  height:auto!important;
+  max-width:max-content!important;
+  color:#fff!important;
+  text-decoration:none!important;
+  font-weight:900!important;
+  letter-spacing:-.02em!important;
+}
+.wd-brand img,
+a.wd-brand img{
+  width:46px!important;
+  height:46px!important;
+  max-width:46px!important;
+  max-height:46px!important;
+  min-width:46px!important;
+  object-fit:contain!important;
+  display:block!important;
+}
+@media(max-width:780px){
+  .wd-brand img,
+  a.wd-brand img{width:40px!important;height:40px!important;max-width:40px!important;max-height:40px!important;min-width:40px!important}
+}
+
+/* Final desktop header alignment: keep brand and menu on one row. */
+@media(min-width:781px){
+  body.whaledive-inner .wd-nav,
+  body.whaledive-equipment .wd-nav,
+  body.whaledive-courses .wd-nav,
+  body.whaledive-about .wd-nav,
+  body.whaledive-blog .wd-nav,
+  body.single-wm_equipment .wd-nav,
+  body.single-wm_course .wd-nav{
+    display:flex!important;
+    flex-direction:row!important;
+    align-items:center!important;
+    justify-content:space-between!important;
+    min-height:74px!important;
+    height:auto!important;
+  }
+  body.whaledive-inner .wd-hamburger,
+  body.whaledive-equipment .wd-hamburger,
+  body.whaledive-courses .wd-hamburger,
+  body.whaledive-about .wd-hamburger,
+  body.whaledive-blog .wd-hamburger,
+  body.single-wm_equipment .wd-hamburger,
+  body.single-wm_course .wd-hamburger{display:none!important}
+  body.whaledive-inner .wd-menu,
+  body.whaledive-equipment .wd-menu,
+  body.whaledive-courses .wd-menu,
+  body.whaledive-about .wd-menu,
+  body.whaledive-blog .wd-menu,
+  body.single-wm_equipment .wd-menu,
+  body.single-wm_course .wd-menu{
+    width:auto!important;
+    margin:0!important;
+    flex:0 0 auto!important;
+  }
+}
